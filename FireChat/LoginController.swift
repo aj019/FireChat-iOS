@@ -7,9 +7,20 @@
 //
 
 import UIKit
+import Firebase
 
 class LoginController: UIViewController {
 
+    let ref = FIRDatabase.database().reference(fromURL: "https://firechat-1ef78.firebaseio.com/")
+    let profileImageView : UIImageView = {
+       
+        let imageV = UIImageView()
+        imageV.image = UIImage(named: "winter")
+        imageV.translatesAutoresizingMaskIntoConstraints = false
+        return imageV
+        
+    }()
+    
     let inputview: UIView = {
     
         let view = UIView()
@@ -21,15 +32,53 @@ class LoginController: UIViewController {
     
     }()
     
-    let registerButton : UIButton = {
+    lazy var registerButton : UIButton = {
         
        let button = UIButton()
         button.backgroundColor = UIColor(r: 50, g: 80, b: 150)
         button.setTitle("Register", for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
-        
+        button.addTarget(self, action: #selector(handleRegister), for: .touchUpInside)
         return button
     }()
+    
+    //handle register event
+    
+    func handleRegister(){
+        
+        
+        guard let email = emailTF.text,let passwd = PassTF.text,let name = nameTF.text else{
+            print("Form is not valid")
+            return
+        }
+        
+        
+        FIRAuth.auth()?.createUser(withEmail: email, password: passwd, completion: { (user, err) in
+            
+            // If there is an error print the error
+            if err != nil{
+                print(err)
+                return
+            }
+            // successfully registered
+            guard let uid = user?.uid else{
+                return
+            }
+            
+            let values = ["name": name,"email": email]
+            let childref = self.ref.child("users").child(uid)
+            childref.updateChildValues(values, withCompletionBlock: { (err, childref) in
+                if err != nil{
+                    print(err)
+                    return
+                }
+                
+                print("Succesfully eneterd")
+                
+            })
+            
+        })
+    }
     
     let nameTF : UITextField = {
        
@@ -83,9 +132,11 @@ class LoginController: UIViewController {
         view.backgroundColor = UIColor(r: 61, g: 91, b: 151)
         view.addSubview(inputview)
         view.addSubview(registerButton)
+        view.addSubview(profileImageView)
         
         setupInputConstraints()
         setupRegisterButtonConstraints()
+        setupProfileImage()
         
         
     }
@@ -146,12 +197,22 @@ class LoginController: UIViewController {
         
     }
     
+    func setupProfileImage(){
+        
+        profileImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        profileImageView.bottomAnchor.constraint(equalTo: inputview.topAnchor, constant: -24).isActive = true
+        profileImageView.widthAnchor.constraint(equalTo: view.widthAnchor, constant: -24).isActive = true
+        profileImageView.heightAnchor.constraint(equalToConstant: 150).isActive = true
+        
+    }
     
     override var preferredStatusBarStyle: UIStatusBarStyle{
         return .lightContent
     }
     
-    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        self.view.endEditing(true)
+    }
 }
 
 extension UIColor{
@@ -159,4 +220,7 @@ extension UIColor{
     convenience init(r: CGFloat,g: CGFloat,b: CGFloat){
         self.init(red: r/255, green: g/255, blue: b/255, alpha: 1)
     }
+    
+    
+    
 }
