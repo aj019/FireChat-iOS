@@ -12,15 +12,19 @@ import Firebase
 class LoginController: UIViewController {
 
     let ref = FIRDatabase.database().reference(fromURL: "https://firechat-1ef78.firebaseio.com/")
-    let profileImageView : UIImageView = {
+    lazy var profileImageView : UIImageView = {
        
         let imageV = UIImageView()
         imageV.image = UIImage(named: "winter")
         imageV.translatesAutoresizingMaskIntoConstraints = false
+        imageV.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleSelectProfilePicture)))
+        imageV.isUserInteractionEnabled = true
         return imageV
         
     }()
     
+    
+        
     let loginRegisterSegmentedControl : UISegmentedControl = {
        
         let sc = UISegmentedControl(items:["Login","Register"])
@@ -103,42 +107,7 @@ class LoginController: UIViewController {
     
     //handle register event
     
-    func handleRegister(){
         
-        
-        guard let email = emailTF.text,let passwd = PassTF.text,let name = nameTF.text else{
-            print("Form is not valid")
-            return
-        }
-        
-        
-        FIRAuth.auth()?.createUser(withEmail: email, password: passwd, completion: { (user, err) in
-            
-            // If there is an error print the error
-            if err != nil{
-                print(err)
-                return
-            }
-            // successfully registered
-            guard let uid = user?.uid else{
-                return
-            }
-            
-            let values = ["name": name,"email": email]
-            let childref = self.ref.child("users").child(uid)
-            childref.updateChildValues(values, withCompletionBlock: { (err, childref) in
-                if err != nil{
-                    print(err)
-                    return
-                }
-                
-                print("Succesfully eneterd")
-                
-            })
-            
-        })
-    }
-    
     let nameTF : UITextField = {
        
         let tf = UITextField()
