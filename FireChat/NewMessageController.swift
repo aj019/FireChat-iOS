@@ -74,25 +74,7 @@ class NewMessageController: UITableViewController {
         
         if let profileImageURL = user.profileImageUrl{
             
-            let url = NSURL(string: profileImageURL)
-            let request = URLRequest(url: url as! URL)
-            URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) in
-                
-                
-                if error != nil{
-                    print(error)
-                    return
-                }
-                
-                DispatchQueue.main.async {
-          //          cell.imageView?.image = UIImage(data: data!)
-                    cell.profileImageView.image = UIImage(data: data!)
-                }
-                
-                
-
-            }).resume()
-            
+            cell.profileImageView.loadImageUsinCachingwithUrlString(urlString: profileImageURL)
             
         }
         
