@@ -71,8 +71,12 @@ extension LoginController:UIImagePickerControllerDelegate,UINavigationController
                 return
             }
             // successfully registered
-            
-            let storage = FIRStorage.storage().reference().child("myImage")
+            guard let uid = user?.uid else{
+                return
+            }
+
+            let imageName = UUID().uuidString
+            let storage = FIRStorage.storage().reference().child("profile_images").child("\(imageName).png")
             
             if let uploadData = UIImagePNGRepresentation(self.profileImageView.image!){
                 
@@ -81,29 +85,38 @@ extension LoginController:UIImagePickerControllerDelegate,UINavigationController
                         print(error)
                     }
                     
-                    print(metadata)
+                    if let profileImageUrl = metadata?.downloadURL()?.absoluteString {
+                        
+                        let values = ["name": name,"email": email,"profileImageUrl": profileImageUrl]
+                        self.registerUserIntoDatabaseWithUID(uid: uid, values: values as [String : AnyObject])
+                        print(metadata)
+                    }
+                    
+                    
+                    
                 })
             }
             
             
             
-            guard let uid = user?.uid else{
+        })
+    }
+    
+    
+    private func registerUserIntoDatabaseWithUID(uid: String,values: [String:AnyObject] ){
+        
+        
+        let childref = self.ref.child("users").child(uid)
+        childref.updateChildValues(values, withCompletionBlock: { (err, childref) in
+            if err != nil{
+                print(err)
                 return
             }
             
-            let values = ["name": name,"email": email]
-            let childref = self.ref.child("users").child(uid)
-            childref.updateChildValues(values, withCompletionBlock: { (err, childref) in
-                if err != nil{
-                    print(err)
-                    return
-                }
-                
-                self.dismiss(animated: true, completion: nil)
-                
-            })
+            self.dismiss(animated: true, completion: nil)
             
         })
+
     }
 
 
